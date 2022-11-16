@@ -1,0 +1,56 @@
+service: apache-hudi
+
+useDotenv: true
+
+provider:
+  name: aws
+  region: us-east-1
+
+  stackTags:
+    product: datateam
+    env: qa
+    created-date: 2022-04-05
+    team: data
+    customer-impact: false
+    terraform: false
+
+plugins:
+  - serverless-glue
+
+Glue:
+  bucketDeploy: ${env:GLUE_BUCKET}
+  tempDirBucket: ${env:GLUE_BUCKET}
+  tempDirS3Prefix: 'temp/'
+  jobs:
+    - name: ${env:JOB_NAME}
+      scriptPath: ${env:GLUE_SCRIPT_PYTHON_FILE_NAME}
+      type: spark
+      glueVersion: "python3-3.0"
+      role: ${env:GLUE_ROLE_ARN}
+      MaxConcurrentRuns: 3
+      DefaultArguments:
+        jobBookmarkOption: "job-bookmark-enable"
+        extraJars: "s3://<BUCKETNAME>/jar/spark-avro_2.12-3.0.1.jar,s3://<BUCKETNAME>/jar/hudi-spark3-bundle_2.12-0.9.0.jar"
+        customArguments:
+          job-bookmark-option: "job-bookmark-enable"
+          base_s3_path : "s3a://<BUCKETNAME>"
+          table_name : "users"
+          additional-python-modules: "faker==11.3.0"
+      tempDir: true
+      WorkerType: Standard
+      NumberOfWorkers: 3
+      Timeout: 2880
+      MaxRetries: 0
+      SupportFiles:
+        - local_path: ${env:LOCAL_PATH_GLUE_SCRIPT}
+          s3_bucket: ${env:GLUE_BUCKET}
+          s3_prefix: ${env:S3_PREFIX_GLUE_SCRIPT}
+          execute_upload: True
+        - local_path: ${env:LOCAL_PATH_JAR_FILE_1}
+          s3_bucket: ${env:GLUE_BUCKET}
+          s3_prefix: ${env:S3_PREFIX_JAR_FILE_SCRIPT}
+          execute_upload: True
+        - local_path: ${env:LOCAL_PATH_JAR_FILE_2}
+          s3_bucket: ${env:GLUE_BUCKET}
+          s3_prefix: ${env:S3_PREFIX_JAR_FILE_SCRIPT}
+          execute_upload: True
