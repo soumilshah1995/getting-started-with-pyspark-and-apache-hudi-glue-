@@ -4,10 +4,11 @@ getting started with pyspark and apache hudi glue
 Getting started with Apache Hudi with PySpark and AWS Glue #1 Intro
 
 
+##### Watch
+* Getting started with Apache Hudi with PySpark and AWS Glue #1 Intro
+* https://www.youtube.com/watch?v=GhQ6Jr7ZlUM&feature=youtu.be
 
-
-
-********** Reading Materials ********** 
+# Reading Materials 
 
 -------------------------------------------------------------------------------
 * Apache Hudi vs Delta Lake vs Apache Iceberg - Lakehouse Feature Comparison
