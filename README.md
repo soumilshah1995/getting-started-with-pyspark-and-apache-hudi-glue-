@@ -3,9 +3,14 @@
 Getting started with Apache Hudi with PySpark and AWS Glue #1 Intro
 
 
-##### Watch
+# Watch
 * Getting started with Apache Hudi with PySpark and AWS Glue #1 Intro
 * https://www.youtube.com/watch?v=GhQ6Jr7ZlUM&feature=youtu.be
+-------------------------------------------------------------------------------
+* Getting started with Apache Hudi with PySpark and AWS Glue #2 Hands on lab with code
+* https://www.youtube.com/watch?v=m26qJNwkcdQ
+-------------------------------------------------------------------------------
+
 
 # Reading Materials 
 
