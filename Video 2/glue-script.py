@@ -15,7 +15,7 @@ try:
 
     print("All modules are loaded .....")
 
-except Exceptionx as e:
+except Exception as e:
     print("Some modules are missing {} ".format(e))
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -25,7 +25,6 @@ args = getResolvedOptions(sys.argv, ['base_s3_path', 'table_name'])
 
 base_s3_path = args['base_s3_path']
 table_name = args['table_name']
-
 
 final_base_path = "{base_s3_path}/tmp/{table_name}".format(
     base_s3_path=base_s3_path, table_name=table_name
@@ -46,7 +45,7 @@ class DataGenerator(object):
     def get_data():
         return [
             (
-                uuid.uuid4().__str__(),
+                x,
                 faker.name(),
                 faker.random_element(elements=('IT', 'HR', 'Sales', 'Marketing')),
                 faker.random_element(elements=('CA', 'NY', 'TX', 'FL', 'IL', 'RJ')),
@@ -70,9 +69,6 @@ spark = create_spark_session()
 sc = spark.sparkContext
 glueContext = GlueContext(sc)
 
-data = DataGenerator.get_data()
-columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
-
 hudi_options = {
     'hoodie.table.name': table_name,
     'hoodie.datasource.write.recordkey.field': 'emp_id',
@@ -87,43 +83,33 @@ hudi_options = {
 # ====================================================
 """Create Spark Data Frame """
 # ====================================================
+data = DataGenerator.get_data()
+columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
 df = spark.createDataFrame(data=data, schema=columns)
-
-
-# ====================================================
-"""Write into HUDI tables """
-# ====================================================
-
-df.write.format("hudi").options(
-    **hudi_options).mode("overwrite").save(final_base_path)
-
-# ====================================================
-"""read from Hudi table"""
-# ====================================================
-userSnapshotDF = spark.read.format("hudi").load(final_base_path)
-
-userSnapshotDF.createOrReplaceTempView("hudi_users_snapshot")
-
+df.write.format("hudi").options(**hudi_options).mode("overwrite").save(final_base_path)
 
 # ====================================================
 """APPEND """
 # ====================================================
+
 impleDataUpd = [
-    (3, "Gabriel","Sales","RJ",81000,30,23000,827307999),
-    (7, "Paulo","Engineering","RJ",79000,53,15000,1627694678),
+    (3, "xxx", "Sales", "RJ", 81000, 30, 23000, 827307999),
+    (7, "x change", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
 ]
 
 columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
-usr_up_df = spark.createDataFrame(data=data, schema=columns)
-usr_up_df.write.format("hudi"). \
-    options(**hudi_options). \
-    mode("append"). \
-    save(final_base_path)
-# ====================================================
+usr_up_df = spark.createDataFrame(data=impleDataUpd, schema=columns)
+usr_up_df.write.format("hudi").options(**hudi_options).mode("append").save(final_base_path)
 
-usr_df_read = spark.read.format("hudi").load(final_base_path)
-usr_up_df.createOrReplaceTempView("hudi_users_view")
 
+# # ====================================================
+
+final_read_df = spark.read.format("hudi").load(final_base_path)
+final_read_df.createOrReplaceTempView("hudi_users_view")
+
+### Spark SQL + Glue Data Catalog ###
 spark.sql(f"CREATE DATABASE IF NOT EXISTS hudi_demo")
-spark.sql(f"DROP TABLE IF EXISTS hudi_demo.users")
-spark.sql(f"CREATE TABLE IF NOT EXISTS hudi_demo.users USING PARQUET LOCATION '{final_base_path}' as (SELECT * from hudi_users_view)")
+
+spark.sql(f"DROP TABLE IF EXISTS hudi_demo.hudi_users")
+
+spark.sql(f"CREATE TABLE IF NOT EXISTS hudi_demo.hudi_users USING PARQUET LOCATION '{target_s3_path}' as (SELECT * from hudi_users_view)")
